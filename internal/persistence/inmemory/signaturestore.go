@@ -67,6 +67,7 @@ func (s *SignatureStore) Get(_ context.Context, deviceID uuid.UUID, counter uint
 	return records[counter-1].Clone(), nil
 }
 
+// GetCounters reports the signature count for each requested device ID.
 func (s *SignatureStore) GetCounters(_ context.Context, deviceIDs []uuid.UUID) (map[uuid.UUID]uint64, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
@@ -90,6 +91,7 @@ func (s *SignatureStore) Last(_ context.Context, deviceID uuid.UUID) (devices.Si
 	return records[len(records)-1].Clone(), true, nil
 }
 
+// Delete removes all signature history for the given device.
 func (s *SignatureStore) Delete(_ context.Context, deviceID uuid.UUID) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
