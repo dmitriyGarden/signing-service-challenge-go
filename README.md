@@ -32,7 +32,7 @@ Refer to `api/tests/integration_test.go` for sample request/response bodies.
 ## Testing Strategy
 - Unit tests: `internal/devices/service_test.go` (device service business logic with gomock) and `api/v0/devices/handler_test.go` (transport validation and error mapping).
 - Integration tests: `api/tests/integration_test.go` spin up the HTTP router with in-memory adapters to exercise lifecycle and signing flows end-to-end.
-- Concurrency checks: `internal/devices/concurrency_test.go` and the integration concurrency case ensure signature counters stay monotonic under parallel requests.
+- Concurrency checks: the integration concurrency case in `api/tests/integration_test.go` and gomock-driven service tests ensure signature counters stay monotonic under parallel requests.
 
 Run `make test` to execute the full suite.
 
