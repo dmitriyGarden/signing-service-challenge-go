@@ -51,6 +51,7 @@ func (g *DefaultKeyGenerator) generateRSA() (domain.KeyMaterial, error) {
 	}
 
 	return domain.KeyMaterial{
+		// Copy slices so callers cannot mutate the generator's buffers.
 		Public:  append([]byte(nil), publicBytes...),
 		Private: append([]byte(nil), privateBytes...),
 	}, nil
@@ -68,6 +69,7 @@ func (g *DefaultKeyGenerator) generateECDSA() (domain.KeyMaterial, error) {
 	}
 
 	return domain.KeyMaterial{
+		// Copy slices so callers cannot mutate the generator's buffers.
 		Public:  append([]byte(nil), publicBytes...),
 		Private: append([]byte(nil), privateBytes...),
 	}, nil

@@ -23,6 +23,7 @@ func NewRSASigner(key *rsa.PrivateKey) *RSASigner {
 // Sign signs the payload using SHA-256 and PKCS#1 v1.5.
 func (s *RSASigner) Sign(dataToBeSigned []byte) ([]byte, error) {
 	if s == nil || s.key == nil {
+		// Prevent panics when the factory failed to wire up the signer.
 		return nil, errors.New("rsa signer not initialised")
 	}
 
@@ -48,6 +49,7 @@ func NewECDSASigner(key *ecdsa.PrivateKey) *ECDSASigner {
 // Sign signs the payload using SHA-256 and returns ASN.1 encoded signature.
 func (s *ECDSASigner) Sign(dataToBeSigned []byte) ([]byte, error) {
 	if s == nil || s.key == nil {
+		// Fail fast if the signer misses required key material.
 		return nil, errors.New("ecdsa signer not initialised")
 	}
 

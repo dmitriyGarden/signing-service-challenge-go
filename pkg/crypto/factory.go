@@ -41,6 +41,7 @@ func (f *SignerFactory) SignerFor(device domain.Device, material domain.KeyMater
 	}
 }
 
+// parseRSAPrivateKey extracts a PKCS#1 private key from a PEM encoded block.
 func parseRSAPrivateKey(pemBytes []byte) (*rsa.PrivateKey, error) {
 	block, _ := pem.Decode(pemBytes)
 	if block == nil {
@@ -55,6 +56,7 @@ func parseRSAPrivateKey(pemBytes []byte) (*rsa.PrivateKey, error) {
 	return key, nil
 }
 
+// parseECDSAPrivateKey extracts an EC private key from a PEM encoded block.
 func parseECDSAPrivateKey(pemBytes []byte) (*ecdsa.PrivateKey, error) {
 	block, _ := pem.Decode(pemBytes)
 	if block == nil {
