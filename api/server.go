@@ -7,6 +7,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 )
 
+// DeviceHandler mounts HTTP routes on a chi router.
 type DeviceHandler interface {
 	Register(r chi.Router)
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 )
 
+// createDevice provisions a new device and returns its metadata.
 func (h *Handler) createDevice(w http.ResponseWriter, r *http.Request) {
 	var request createDeviceRequest
 	decoder := json.NewDecoder(r.Body)
@@ -53,6 +54,7 @@ func (h *Handler) createDevice(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// listDevices returns all registered devices.
 func (h *Handler) listDevices(w http.ResponseWriter, r *http.Request) {
 	devices, err := h.service.ListDevices(r.Context())
 	if err != nil {
@@ -67,6 +69,7 @@ func (h *Handler) listDevices(w http.ResponseWriter, r *http.Request) {
 	writeAPIResponse(w, http.StatusOK, payloads)
 }
 
+// getDevice fetches a device by ID.
 func (h *Handler) getDevice(w http.ResponseWriter, r *http.Request) {
 	id, err := h.deviceID(r)
 	if err != nil {
@@ -85,6 +88,7 @@ func (h *Handler) getDevice(w http.ResponseWriter, r *http.Request) {
 	writeAPIResponse(w, http.StatusOK, payloads[0])
 }
 
+// updateDevice updates a device's label.
 func (h *Handler) updateDevice(w http.ResponseWriter, r *http.Request) {
 	id, err := h.deviceID(r)
 	if err != nil {
@@ -115,6 +119,7 @@ func (h *Handler) updateDevice(w http.ResponseWriter, r *http.Request) {
 	writeAPIResponse(w, http.StatusOK, payloads[0])
 }
 
+// deleteDevice removes a device and associated state.
 func (h *Handler) deleteDevice(w http.ResponseWriter, r *http.Request) {
 	id, err := h.deviceID(r)
 	if err != nil {
@@ -128,6 +133,7 @@ func (h *Handler) deleteDevice(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// makeDevicesPayload enriches devices with their current counters.
 func (h *Handler) makeDevicesPayload(ctx context.Context, devices []domain.Device) ([]devicePayload, error) {
 	ids := make([]uuid.UUID, len(devices))
 	for i, device := range devices {
