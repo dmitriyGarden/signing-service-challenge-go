@@ -8,6 +8,7 @@ type ValidationError struct {
 	Message string
 }
 
+// Error implements the error interface.
 func (e ValidationError) Error() string {
 	if e.Field == "" {
 		return fmt.Sprintf("validation failed: %s", e.Message)
@@ -21,6 +22,7 @@ type NotFoundError struct {
 	ID       string
 }
 
+// Error implements the error interface.
 func (e NotFoundError) Error() string {
 	if e.Resource == "" {
 		return "resource not found"
@@ -36,6 +38,7 @@ type ConflictError struct {
 	Reason string
 }
 
+// Error implements the error interface.
 func (e ConflictError) Error() string {
 	if e.Reason == "" {
 		return "conflict"
@@ -48,6 +51,7 @@ type InternalError struct {
 	Reason string
 }
 
+// Error implements the error interface.
 func (e InternalError) Error() string {
 	if e.Reason == "" {
 		return "internal error"
@@ -55,6 +59,7 @@ func (e InternalError) Error() string {
 	return e.Reason
 }
 
+// Predefined domain errors reused across services.
 var (
 	ErrInvalidAlgorithm   = ValidationError{Field: "algorithm", Message: "unsupported algorithm"}
 	ErrInvalidDeviceID    = ValidationError{Field: "id", Message: "device ID must be a valid UUID"}

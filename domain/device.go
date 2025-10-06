@@ -12,6 +12,7 @@ import (
 // Algorithm enumerates supported signing algorithms.
 type Algorithm string
 
+// Supported signing algorithms.
 const (
 	AlgorithmRSA   Algorithm = "RSA"
 	AlgorithmECDSA Algorithm = "ECDSA"
@@ -27,6 +28,7 @@ type Device struct {
 }
 
 // Clone provides a deep copy to avoid leaking internal state.
+// Clone returns a shallow copy of the device to avoid exposing internal references.
 func (d Device) Clone() Device {
 	clone := d
 	return clone
@@ -42,8 +44,8 @@ func (d Device) WithLabel(label string, at time.Time) Device {
 
 // KeyMaterial holds the serialized public and private keys for a device.
 type KeyMaterial struct {
-	Public  []byte
-	Private []byte
+	Public  []byte // PEM encoded public key material.
+	Private []byte // PEM encoded private key material.
 }
 
 // BuildSecuredPayload composes the string to be signed following domain rules.
