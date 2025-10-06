@@ -1,19 +1,34 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-The service code lives in `main.go`, which wires the HTTP server from `api/`. API handlers are split into `api/server.go` for router setup, `api/device.go` for device endpoints, and `api/health.go` for readiness checks. Domain logic for devices, counters, and signing contracts sits in `domain/device.go`. Cryptographic primitives and key encoding helpers are under `crypto/`, while storage abstractions reside in `persistence/`. Keep integration assets and future fixtures inside `persistence/fixtures` (create the folder if needed) so runtime data stays separate from Go sources.
+Core setup lives in `main.go`, which invokes `internal/app` to compose dependencies. HTTP handlers are grouped in `api/` with the versioned transport under `api/v0/devices`. Domain contracts and the main device service sit in `internal/devices` (including signature history types), while persistence adapters (`persistence/`) provide in-memory repositories and signature stores. Cryptographic helpers and signer factories are placed under `crypto/`. Integration documentation lives in `docs/`, and request collections can live alongside the transport (e.g. `api/http/api.http`).
+
+Runtime configuration is centralised in `internal/config`, which currently reads environment variables such as `LISTEN_ADDRESS` (default `:8080`).
 
 ## Build, Test, and Development Commands
-Use `go build ./...` to ensure all packages compile. Run `go test ./...` to execute unit tests once they exist. Start the local server with `go run ./main.go` and point clients at `http://localhost:8080`. Add `GOLOG=debug` when running locally to surface verbose logs while developing new handlers.
+- `make build` – compile all packages.
+- `make run` – run the HTTP API on `:8080`.
+- `make test` – execute the entire suite (unit + integration).
+- `make race` – run the suite with the race detector enabled.
+- `make integration` – execute only the integration tests in `api/tests`.
+- `make mocks` – regenerate gomock doubles under `pkg/mocks` after interface changes.
+- `make tidy` – sync module dependencies.
+- `make clean` – remove local Go caches and generated mocks.
 
 ## Coding Style & Naming Conventions
-Follow standard Go formatting (`gofmt` or `goimports` before committing). Stick with tabs for indentation and keep lines under 120 characters. Use PascalCase for exported types and functions, camelCase for locals, and uppercase abbreviations only when common (`UUID`, `RSA`). Name files after the concept they encapsulate (`device_service.go`, `memory_store.go`). Prefer concise interfaces that expose domain verbs (`Signer`, `DeviceRepository`).
+Stick to `gofmt`/`goimports` formatting (tabs, 120-char guidance). Exported types use PascalCase; locals camelCase. File names mirror concepts (`service.go`, `handler.go`, `memory_store.go`). Keep interfaces concise and named after their roles (e.g., `Repository`, `KeyStore`).
 
 ## Testing Guidelines
-Favor table-driven tests placed next to the code under test, e.g., `domain/device_test.go`. Name tests `TestFunction_Scenario` for clarity. Cover happy paths, signature counter edge cases, and error propagation from persistence and crypto layers. For HTTP handlers, use `httptest` with JSON fixtures to verify response codes and payloads. Aim for coverage on all domain mutations before merging.
+- Unit tests rely on gomock (see `internal/devices/service_test.go`, `api/v0/devices/handler_test.go`). Use expectations to verify storage interactions (`SignatureStore.Append`, etc.).
+- Integration tests (`api/tests/integration_test.go`) cover REST scenarios: lifecycle, validation errors, missing devices, signature history retrieval, and concurrent signing against the in-memory stack.
+- Concurrency is validated in `internal/devices/concurrency_test.go`, ensuring signature counters remain monotonic under parallel requests.
+- Use `make test` for the full suite; avoid skipping tests unless justified.
 
 ## Commit & Pull Request Guidelines
-Write commits in the imperative mood (`Add RSA signer cache`), scoped to a single logical change; the history currently uses short "Initial commit" messages—continue in that concise style. Reference issue IDs when available (`[#12]`). Pull requests should summarize intent, list test evidence (`go test ./...` output), and mention any follow-up tasks. Include API or schema changes in the description and attach example requests or responses when they help reviewers.
+Write imperative commit messages focused on intent (`Add concurrent signing test`). Reference tasks where possible (`[#12]`). Pull requests should:
+- Summarize changes and affected modules.
+- Include test evidence (`make test` output snippet).
+- Highlight API or schema updates, with sample payloads when applicable.
 
 ## Security & Configuration Tips
-Key material should remain ephemeral in development; avoid committing generated keys or `.pem` files. Store sensitive runtime configuration in environment variables, not source. When adding persistence backends, ensure keys and signatures are encrypted at rest and document rotation procedures in `README.md`.
+Keep generated keys ephemeral; do not commit `.pem` files. Configuration currently relies on defaults in `main.go`; add environment-based overrides in `internal/app` if needed. Future persistence backends should encrypt keys at rest and document rotation procedures.

@@ -4,34 +4,36 @@
 The service follows a layered structure that separates HTTP transport, domain rules, cryptography, and persistence. Request handlers translate HTTP payloads into domain calls, while the domain layer encapsulates signature device behavior, ensuring that signature counters remain consistent and the signing process stays reusable across algorithms and storage backends.
 
 ## Domain Layer
-- `domain.Device` holds the persistent state: `ID string`, `Algorithm Algorithm`, `Label string`, `SignatureCounter uint64`, `LastSignature []byte`, `CreatedAt time.Time`, `UpdatedAt time.Time`. Helper methods guard incremental updates (`IncrementCounter`, `SetLabel`).
-- `domain.Algorithm` enumerates supported algorithms (`AlgorithmRSA`, `AlgorithmECDSA`), validating input before device creation.
-- `domain.DeviceService` orchestrates workflows. Dependencies:
-  - `DeviceRepository`: CRUD access plus atomic counter updates (`Create`, `Get`, `List`, `Update`, `UpdateSignatureState`).
-  - `SignerFactory`: returns a `Signer` for a device algorithm and keypair.
-  - `KeyStore`: persists generated key pairs, enabling retrieval for signing.
-- `domain.SignatureResult` returns the base64 signature and the secured payload string. `DeviceService.SignTransaction` ensures the counter increments only after the crypto call succeeds and persists the new `LastSignature`.
+- `domain.Device` holds canonical device state (`ID`, `Algorithm`, `Label`, timestamps) and exposes immutable update helpers. Signature counters are derived dynamically via the signature store.
+- `domain.Algorithm`, `domain.ValidateAlgorithm`, and `domain.ParseAlgorithm` centralise validation for supported algorithms (`RSA`, `ECDSA`).
+- `domain.BuildSecuredPayload` composes the `<counter>_<payload>_<reference>` string used for signing, ensuring consistent behaviour across service implementations.
+- Error types (`ValidationError`, `NotFoundError`, `ConflictError`, `InternalError`) convey failure semantics without binding to transport concerns.
+- `internal/devices.SignatureRecord` captures stored signature metadata (counter, signature, signed payload, timestamp) for retrieval endpoints.
 
 ## Persistence Layer
-- Default implementation: `persistence.InMemoryDeviceRepository` backed by `sync.RWMutex` and maps keyed by device ID. Counter updates use `sync.Mutex` to guarantee monotonic increments.
-- `KeyStore` interface has `Store(deviceID string, publicKey, privateKey []byte)` and `Load(deviceID string) (publicKey, privateKey []byte, error)`. In-memory variant uses a separate map to isolate sensitive bytes from device metadata.
-- Persistence interfaces allow swapping to SQL/NoSQL stores without changing domain logic.
+- `internal/devices.Repository` and `internal/devices.KeyStore` describe the storage ports. The default in-memory implementations (`persistence.InMemoryDeviceRepository`, `persistence.InMemoryKeyStore`) satisfy them with `sync.RWMutex`-guarded maps.
+- `internal/devices.SignatureStore` abstracts signature history. `persistence.InMemorySignatureStore` implements it with append-only slices and counter lookup maps.
+- Repository methods return typed domain errors for duplicates and missing IDs, while `SignatureStore` guarantees sequential counters.
 
 ## Crypto Layer
-- `crypto.Signer` stays the abstraction. A factory (`SignerFactory` implementation) inspects `domain.Algorithm` and wires RSA/ECDSA signers by unmarshal­ing stored key material.
-- RSA signer uses `crypto/rsa` with PKCS#1 v1.5 for signing; ECDSA signer uses `ecdsa.SignASN1`. Both return base64-encoded signatures.
-- Key generation lives in `crypto/generation.go`; `domain.DeviceService.CreateDevice` invokes the corresponding generator via factory.
+- `crypto.DefaultKeyGenerator` implements `internal/devices.KeyGenerator`, emitting PEM-encoded `domain.KeyMaterial` for RSA and ECDSA pairs.
+- `crypto.SignerFactory` implements `internal/devices.SignerFactory`, decoding private keys and returning algorithm-specific signers (`RSASigner`, `ECDSASigner`).
+- Signers normalise on SHA-256 hashing and output raw signature bytes for the service to base64-encode.
+
+## Application Layer
+- `internal/devices.Service` orchestrates device workflows (create, list, update label, delete, sign). It validates input, coordinates persistence, and ensures counters advance monotonically before persisting signatures.
+- `internal/devices.LoggingService` decorates the core service with optional structured logging hooks.
+- `internal/app.NewServer` is the composition root: it wires repositories, keystore, crypto providers, services, logging decorator, and HTTP handlers.
+- `internal/config` centralises environment-driven settings (e.g. `LISTEN_ADDRESS`) that are loaded before the server bootstraps.
 
 ## HTTP Transport
-- Router resides in `api/server.go`. Routes:
-  - `GET /api/v0/health`
-  - `POST /api/v0/devices`
-  - `GET /api/v0/devices`
-  - `GET /api/v0/devices/{id}`
-  - `POST /api/v0/devices/{id}/sign`
-- Handlers validate JSON payloads, invoke `DeviceService`, and return structured responses or errors (`ErrorResponse`). Validation failures respond with `422 Unprocessable Entity`.
+- `api/server.go` configures the HTTP mux, registering the health endpoint and delegating device routes to `api/v0/devices.Handler`.
+- `api/v0/devices.Handler` owns JSON validation, error translation, and response envelopes for `/api/v0/devices` CRUD operations and the `/sign` action.
+- Additional endpoints (`GET /api/v0/devices/{id}/signatures`, `GET /api/v0/devices/{id}/signatures/{counter}`) expose signature history backed by the domain service.
+- Typed domain errors are mapped to `422` (validation), `404` (missing devices), `409` (conflicts), or `500` (unexpected issues), while successful responses follow a `{ "data": ... }` convention.
 
 ## Cross-Cutting Concerns
-- Errors use typed values (`domain.ErrNotFound`, `domain.ErrInvalidInput`) to drive HTTP status codes.
-- Logging occurs in handlers wrapping domain calls; future instrumentation hooks can be added without leaking into domain code.
-- Configuration collected in `main.go` (listen address, signer factory choice, repository backend) to keep `api` package free of global state.
+- Logging remains opt-in via the service decorator, keeping the core logic oblivious to `log.Printf` or future tracing frameworks.
+- Composition centralised in `internal/app` simplifies testing (dependency injection) and upcoming backend swaps.
+- Error typing keeps HTTP, CLI, or gRPC frontends consistent—new transports can read the same error taxonomy without string matching.
+- Integration confidence comes from gomock-driven unit tests and the `api/tests` suite, which exercises the router with in-memory adapters (including a parallel signing stress case).

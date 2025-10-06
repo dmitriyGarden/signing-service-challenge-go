@@ -1,0 +1,44 @@
+### GET request to check health
+GET http://127.0.0.1:8080/api/v0/health
+
+### GET request to get list of devices
+GET http://127.0.0.1:8080/api/v0/devices
+
+### GET request to get device by id
+GET http://127.0.0.1:8080/api/v0/devices/0199b945-aa1f-7aa8-a8c3-744d107fd2ad
+
+### POST request to create device
+POST 127.0.0.1:8080/api/v0/devices
+Content-Type: application/json
+
+{
+  "id": "0199b945-aa1f-7aa8-a8c3-744d107fd2ad",
+  "algorithm": "RSA",
+  "label": "my device"
+}
+
+### PUT request to update label of device
+PUT http://127.0.0.1:8080/api/v0/devices/0199b945-aa1f-7aa8-a8c3-744d107fd2ad
+Content-Type: application/json
+
+{
+  "label": "updated label"
+}
+
+### DELETE request to delete device
+DELETE http://127.0.0.1:8080/api/v0/devices/0199b945-aa1f-7aa8-a8c3-744d107fd2ad
+
+### POST request to sign transaction
+POST 127.0.0.1:8080/api/v0/devices/0199b945-aa1f-7aa8-a8c3-744d107fd2ad/sign
+Content-Type: application/json
+
+{
+  "data": "my secret data"
+}
+
+### GET request to get the list of signatures
+GET 127.0.0.1:8080/api/v0/devices/0199b945-aa1f-7aa8-a8c3-744d107fd2ad/signatures
+
+
+### GET request to get the signature
+GET 127.0.0.1:8080/api/v0/devices/0199b945-aa1f-7aa8-a8c3-744d107fd2ad/signatures/1

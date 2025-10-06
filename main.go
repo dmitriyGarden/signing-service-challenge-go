@@ -4,17 +4,15 @@ import (
 	"log"
 
 	"github.com/fiskaly/coding-challenges/signing-service-challenge/internal/app"
-)
-
-const (
-	ListenAddress = ":8080"
-	// TODO: add further configuration parameters here ...
+	"github.com/fiskaly/coding-challenges/signing-service-challenge/internal/config"
 )
 
 func main() {
-	server := app.NewServer(ListenAddress)
+	cfg := config.Load()
+
+	server := app.NewServer(cfg.ListenAddress)
 
 	if err := server.Run(); err != nil {
-		log.Fatal("Could not start server on ", ListenAddress)
+		log.Fatalf("could not start server on %s: %v", cfg.ListenAddress, err)
 	}
 }
