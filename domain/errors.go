@@ -58,7 +58,6 @@ func (e InternalError) Error() string {
 var (
 	ErrInvalidAlgorithm   = ValidationError{Field: "algorithm", Message: "unsupported algorithm"}
 	ErrInvalidDeviceID    = ValidationError{Field: "id", Message: "device ID must be a valid UUID"}
-	ErrDeviceNotFound     = NotFoundError{Resource: "device"}
 	ErrDeviceExists       = ConflictError{Reason: "device already exists"}
 	ErrKeyMaterialMissing = InternalError{Reason: "key material missing"}
 )

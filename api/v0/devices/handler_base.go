@@ -10,8 +10,6 @@ import (
 	"github.com/google/uuid"
 )
 
-const devicesPathPrefix = "/api/v0/devices/"
-
 var (
 	_ Service = (*appdevices.Service)(nil)
 	_ Service = (*appdevices.LoggingService)(nil)

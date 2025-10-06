@@ -8,7 +8,7 @@ import (
 // WriteInternalError writes a default internal error message as an HTTP response.
 func WriteInternalError(w http.ResponseWriter) {
 	w.WriteHeader(http.StatusInternalServerError)
-	w.Write([]byte(http.StatusText(http.StatusInternalServerError)))
+	_, _ = w.Write([]byte(http.StatusText(http.StatusInternalServerError)))
 }
 
 // WriteErrorResponse takes an HTTP status code and a slice of errors
@@ -25,7 +25,7 @@ func WriteErrorResponse(w http.ResponseWriter, code int, errors []string) {
 		WriteInternalError(w)
 	}
 
-	w.Write(bytes)
+	_, _ = w.Write(bytes)
 }
 
 // WriteAPIResponse takes an HTTP status code and a generic data struct
@@ -42,5 +42,5 @@ func WriteAPIResponse(w http.ResponseWriter, code int, data interface{}) {
 		WriteInternalError(w)
 	}
 
-	w.Write(bytes)
+	_, _ = w.Write(bytes)
 }
