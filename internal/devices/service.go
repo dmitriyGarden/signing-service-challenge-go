@@ -21,7 +21,7 @@ type Service struct {
 	signerFactory  SignerFactory
 	signatureStore SignatureStore
 	clock          func() time.Time
-	signMX         sync.RWMutex
+	signMX         sync.RWMutex // guards Append operations to keep signature counters monotonic
 }
 
 // NewService constructs a Service with injectable dependencies for testing.
@@ -208,6 +208,7 @@ func (s *Service) GetDevice(ctx context.Context, id uuid.UUID) (domain.Device, e
 	return device, nil
 }
 
+// GetCounters reports the current signature counter for each requested device ID.
 func (s *Service) GetCounters(ctx context.Context, ids []uuid.UUID) (map[uuid.UUID]uint64, error) {
 	if s == nil {
 		return nil, errors.New("device service is nil")
@@ -287,8 +288,7 @@ func (l *LoggingService) log(event string, fields map[string]interface{}) {
 	}
 }
 
-// The following methods proxy to the wrapped service while emitting log hooks.
-
+// CreateDevice proxies to the wrapped service while emitting log hooks.
 func (l *LoggingService) CreateDevice(ctx context.Context, input CreateDeviceInput) (*CreateDeviceResult, error) {
 	l.log("device.create", map[string]interface{}{"id": input.ID, "algorithm": input.Algorithm})
 	result, err := l.inner.CreateDevice(ctx, input)
@@ -298,6 +298,7 @@ func (l *LoggingService) CreateDevice(ctx context.Context, input CreateDeviceInp
 	return result, err
 }
 
+// SignTransaction proxies signing calls and adds log events.
 func (l *LoggingService) SignTransaction(ctx context.Context, input SignTransactionInput) (*SignatureResult, error) {
 	l.log("device.sign", map[string]interface{}{"id": input.DeviceID})
 	result, err := l.inner.SignTransaction(ctx, input)
@@ -307,6 +308,7 @@ func (l *LoggingService) SignTransaction(ctx context.Context, input SignTransact
 	return result, err
 }
 
+// UpdateDeviceLabel wraps the service update call with logging.
 func (l *LoggingService) UpdateDeviceLabel(ctx context.Context, id uuid.UUID, label string) (domain.Device, error) {
 	l.log("device.update", map[string]interface{}{"id": id})
 	device, err := l.inner.UpdateDeviceLabel(ctx, id, label)
@@ -316,6 +318,7 @@ func (l *LoggingService) UpdateDeviceLabel(ctx context.Context, id uuid.UUID, la
 	return device, err
 }
 
+// GetCounters records failures when retrieving signature counters.
 func (l *LoggingService) GetCounters(ctx context.Context, ids []uuid.UUID) (map[uuid.UUID]uint64, error) {
 	counters, err := l.inner.GetCounters(ctx, ids)
 	if err != nil {
@@ -324,6 +327,7 @@ func (l *LoggingService) GetCounters(ctx context.Context, ids []uuid.UUID) (map[
 	return counters, err
 }
 
+// GetDevice logs retrieval attempts for individual devices.
 func (l *LoggingService) GetDevice(ctx context.Context, id uuid.UUID) (domain.Device, error) {
 	device, err := l.inner.GetDevice(ctx, id)
 	if err != nil {
@@ -332,6 +336,7 @@ func (l *LoggingService) GetDevice(ctx context.Context, id uuid.UUID) (domain.De
 	return device, err
 }
 
+// ListDevices wraps ListDevices with error logging.
 func (l *LoggingService) ListDevices(ctx context.Context) ([]domain.Device, error) {
 	devices, err := l.inner.ListDevices(ctx)
 	if err != nil {
@@ -340,6 +345,7 @@ func (l *LoggingService) ListDevices(ctx context.Context) ([]domain.Device, erro
 	return devices, err
 }
 
+// DeleteDevice logs delete attempts and errors.
 func (l *LoggingService) DeleteDevice(ctx context.Context, id uuid.UUID) error {
 	l.log("device.delete", map[string]interface{}{"id": id})
 	err := l.inner.DeleteDevice(ctx, id)
@@ -349,6 +355,7 @@ func (l *LoggingService) DeleteDevice(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
+// ListSignatures logs list operations and failures.
 func (l *LoggingService) ListSignatures(ctx context.Context, deviceID uuid.UUID) ([]SignatureRecord, error) {
 	records, err := l.inner.ListSignatures(ctx, deviceID)
 	if err != nil {
@@ -357,6 +364,7 @@ func (l *LoggingService) ListSignatures(ctx context.Context, deviceID uuid.UUID)
 	return records, err
 }
 
+// GetSignature wraps the service call to fetch a specific signature.
 func (l *LoggingService) GetSignature(ctx context.Context, deviceID uuid.UUID, counter uint64) (SignatureRecord, error) {
 	record, err := l.inner.GetSignature(ctx, deviceID, counter)
 	if err != nil {
