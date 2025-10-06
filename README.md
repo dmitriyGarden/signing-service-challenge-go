@@ -3,6 +3,8 @@
 ## Overview
 This service offers an HTTP API for managing signature devices and signing payloads using RSA or ECDSA keys. The system is structured into modular layers (API handlers, device service, crypto providers, persistence) and is accompanied by unit and integration tests.
 
+> Development note: an AI coding assistant (Codex) collaborated on implementing features, documentation, and tests in this repository.
+
 ## Quick Start
 - Install Go 1.20+
 - Run all tests: `make test`
