@@ -38,7 +38,7 @@ Run `make test` to execute the full suite.
 
 ## Architecture Notes
 - Dependency wiring lives in `internal/app/app.go`.
-- Crypto implementations and key generation reside in `crypto/`.
-- In-memory persistence resides in `persistence/` and satisfies service ports defined in `internal/devices/ports.go`.
+- Crypto implementations and key generation reside in `pkg/crypto/`.
+- In-memory persistence resides in `internal/persistence/` and satisfies service ports defined in `internal/devices/ports.go`.
 
 For a deeper breakdown, see `docs/ARCHITECTURE.md`.

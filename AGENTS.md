@@ -21,7 +21,7 @@ Stick to `gofmt`/`goimports` formatting (tabs, 120-char guidance). Exported type
 ## Testing Guidelines
 - Unit tests rely on gomock (see `internal/devices/service_test.go`, `api/v0/devices/handler_test.go`). Use expectations to verify storage interactions (`SignatureStore.Append`, etc.).
 - Integration tests (`api/tests/integration_test.go`) cover REST scenarios: lifecycle, validation errors, missing devices, signature history retrieval, and concurrent signing against the in-memory stack.
-- Concurrency is validated in `internal/devices/concurrency_test.go`, ensuring signature counters remain monotonic under parallel requests.
+- Concurrency is exercised by `TestConcurrentSigningIntegration` in `api/tests/integration_test.go`, ensuring signature counters remain monotonic under parallel requests.
 - Use `make test` for the full suite; avoid skipping tests unless justified.
 
 ## Commit & Pull Request Guidelines

@@ -16,8 +16,8 @@ The service follows a layered structure that separates HTTP transport, domain ru
 - Repository methods return typed domain errors for duplicates and missing IDs, while `SignatureStore` guarantees sequential counters.
 
 ## Crypto Layer
-- `crypto.DefaultKeyGenerator` implements `internal/devices.KeyGenerator`, emitting PEM-encoded `domain.KeyMaterial` for RSA and ECDSA pairs.
-- `crypto.SignerFactory` implements `internal/devices.SignerFactory`, decoding private keys and returning algorithm-specific signers (`RSASigner`, `ECDSASigner`).
+- `pkg/crypto.DefaultKeyGenerator` implements `internal/devices.KeyGenerator`, emitting PEM-encoded `domain.KeyMaterial` for RSA and ECDSA pairs.
+- `pkg/crypto.SignerFactory` implements `internal/devices.SignerFactory`, decoding private keys and returning algorithm-specific signers (`RSASigner`, `ECDSASigner`).
 - Signers normalise on SHA-256 hashing and output raw signature bytes for the service to base64-encode.
 
 ## Application Layer
