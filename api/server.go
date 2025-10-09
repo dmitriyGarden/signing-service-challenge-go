@@ -31,8 +31,6 @@ func (s *Server) Run() error {
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID, middleware.Logger, middleware.Recoverer)
 
-	// TODO add auth middleware
-
 	for prefix, handlers := range s.handlers {
 		r.Route(prefix, handlers.Register)
 	}

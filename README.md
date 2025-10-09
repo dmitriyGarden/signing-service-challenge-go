@@ -19,7 +19,7 @@ This service offers an HTTP API for managing signature devices and signing paylo
 - `POST /api/v0/devices` — create a device (`algorithm` must be `rsa` or `ecdsa`)
 - `GET /api/v0/devices` — list devices
 - `GET /api/v0/devices/{id}` — fetch a device
-- `PATCH /api/v0/devices/{id}` — update label
+- `PUT /api/v0/devices/{id}` — update label
 - `DELETE /api/v0/devices/{id}` — delete device
 - `POST /api/v0/devices/{id}/sign` — sign payload; response includes signature and secured data
 - `GET /api/v0/devices/{id}/signatures` — retrieve signature history for a device

@@ -237,7 +237,7 @@ func (s *Service) DeleteDevice(ctx context.Context, id uuid.UUID) error {
 	if s == nil {
 		return errors.New("device service is nil")
 	}
-	// TODO transactions
+
 	if err := s.repo.Delete(ctx, id); err != nil {
 		return err
 	}

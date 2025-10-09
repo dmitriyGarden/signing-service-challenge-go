@@ -56,7 +56,6 @@ func (h *Handler) registerDevices(r chi.Router) {
 }
 
 func (h *Handler) deviceID(r *http.Request) (uuid.UUID, error) {
-	chi.URLParam(r, "device_id")
 	deviceID, err := uuid.Parse(chi.URLParam(r, "device_id"))
 	if err != nil {
 		return uuid.Nil, domain.ErrInvalidDeviceID
